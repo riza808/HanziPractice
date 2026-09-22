@@ -50,6 +50,14 @@
     -webkit-font-smoothing: antialiased; min-height: 100%;
   }
   .wrap { max-width: 480px; margin: 0 auto; padding: 20px 18px calc(28px + env(safe-area-inset-bottom, 0px)); }
+  @media (min-width: 700px) {
+    .wrap { max-width: 760px; padding: 32px 36px calc(40px + env(safe-area-inset-bottom, 0px)); }
+    header h1 { font-size: 23px; }
+    header p { font-size: 14px; }
+  }
+  @media (min-width: 1000px) {
+    .wrap { max-width: 920px; }
+  }
   header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
   header .title { display: flex; align-items: baseline; gap: 10px; }
   header .title .mark { font-family: "Noto Serif SC", serif; font-size: 30px; font-weight: 700; color: var(--seal-ink); line-height: 1; }
@@ -84,12 +92,24 @@
   .chip.add-chip { display: flex; align-items: center; justify-content: center; color: var(--ink-soft); font-size: 20px; border: 1.5px dashed var(--line); background: transparent; }
 
   .stage-card { background: var(--paper-2); border-radius: var(--radius); padding: 18px 18px 14px; box-shadow: 0 6px 18px var(--shadow); position: relative; }
+  @media (min-width: 700px) {
+    .stage-card { padding: 26px 26px 20px; }
+    .stage-info .py-big { font-size: 19px; }
+    .stage-info .meaning { font-size: 14.5px; }
+    .chip .txt { font-size: 26px; }
+    .chip .txt.long { font-size: 18px; }
+    .chip { padding: 9px 13px 10px; min-width: 60px; max-width: 140px; }
+    .feedback { font-size: 15px; }
+    .btn { font-size: 15px; padding: 13px 10px; }
+  }
   .stage-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; min-height: 34px; }
   .stage-info .py-big { font-size: 15px; font-weight: 600; color: var(--ink); }
   .stage-info .meaning { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
   .mastery-tag { font-size: 10.5px; padding: 3px 8px; border-radius: 999px; background: var(--jade-soft); color: var(--jade); font-weight: 600; white-space: nowrap; }
 
   .stage { position: relative; width: 100%; max-width: 320px; min-height: 130px; margin: 0 auto; background: var(--paper); border-radius: 8px; overflow: hidden; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+  @media (min-width: 700px) { .stage { max-width: 520px; } }
+  @media (min-width: 1000px) { .stage { max-width: 620px; } }
   .stage-row { display: flex; gap: 6px; align-items: center; justify-content: center; width: 100%; height: 100%; overflow-x: auto; padding: 4px; }
   .char-box { position: relative; flex: 0 0 auto; border-radius: 6px; overflow: hidden; border: 1.5px solid transparent; }
   .char-box.active-box { border-color: var(--seal); }
@@ -505,7 +525,8 @@
     var containerWidth = stageOuter.clientWidth || 300;
     var gap = 6;
     var raw = Math.floor((containerWidth - gap * (chars.length - 1)) / chars.length);
-    var size = Math.max(64, Math.min(280, raw));
+    var boxCap = window.innerWidth >= 1000 ? 560 : window.innerWidth >= 700 ? 460 : 280;
+    var size = Math.max(64, Math.min(boxCap, raw));
     stageOuter.style.height = size + 'px';
 
     var cs = getComputedStyle(document.documentElement);
