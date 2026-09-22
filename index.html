@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#A23E2E">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7/dist/hanzi-writer.min.js"></script>
 <style>
   :root {
@@ -242,6 +245,18 @@
       <button class="btn primary" id="bulkAddBtn" style="width:100%">Import pasted list</button>
     </div>
     <div class="add-hint">Accepts comma- or tab-separated lines (character required, pinyin and meaning optional). Good for HSK 3–6 or any other list you find elsewhere — paste it in and it becomes practiceable right away.</div>
+  </div>
+
+  <div class="add-form" id="backupForm">
+    <h2>Backup</h2>
+    <div class="row">
+      <button class="btn ghost" id="exportBtn" style="width:100%">Export deck (.json)</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn ghost" id="importBtn" style="width:100%">Import from file</button>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+    </div>
+    <div class="add-hint" id="backupHint">Export saves every character, its pinyin/meaning, and your practice stats to a file you keep. Importing merges it back in — matching words get their saved progress restored, new ones get added.</div>
   </div>
 </div>
 
@@ -804,6 +819,74 @@
     if (wasEmpty && deck.length) selectIndex(0);
   });
 
+  document.getElementById('exportBtn').addEventListener('click', function () {
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    var d = new Date();
+    var fname = 'hanzi-practice-backup-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json';
+    var blob = new Blob([JSON.stringify(deck, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    document.getElementById('backupHint').textContent = 'Exported ' + deck.length + ' item' + (deck.length === 1 ? '' : 's') + ' to ' + fname + '.';
+  });
+
+  document.getElementById('importBtn').addEventListener('click', function () {
+    document.getElementById('importFile').click();
+  });
+
+  document.getElementById('importFile').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var hint = document.getElementById('backupHint');
+      var parsed;
+      try { parsed = JSON.parse(reader.result); } catch (err) {
+        hint.textContent = "That file isn't valid JSON — make sure it's an export from this app.";
+        return;
+      }
+      if (!Array.isArray(parsed)) {
+        hint.textContent = "That file doesn't look like a deck backup.";
+        return;
+      }
+      var existingByText = {};
+      deck.forEach(function (d, i) { existingByText[d.text] = i; });
+      var added = 0, restored = 0;
+      parsed.forEach(function (it) {
+        if (!it || !it.text) return;
+        var stats = it.stats && typeof it.stats === 'object' ? {
+          score: typeof it.stats.score === 'number' ? it.stats.score : 0,
+          attempts: typeof it.stats.attempts === 'number' ? it.stats.attempts : 0,
+          interval: typeof it.stats.interval === 'number' ? it.stats.interval : 0,
+          dueAt: typeof it.stats.dueAt === 'number' ? it.stats.dueAt : Date.now()
+        } : { score: 0, attempts: 0, interval: 0, dueAt: Date.now() };
+        if (existingByText.hasOwnProperty(it.text)) {
+          var idx = existingByText[it.text];
+          deck[idx].pinyin = it.pinyin || deck[idx].pinyin;
+          deck[idx].meaning = it.meaning || deck[idx].meaning;
+          deck[idx].stats = stats;
+          restored++;
+        } else {
+          deck.push({ text: it.text, pinyin: it.pinyin || '', meaning: it.meaning || '', stats: stats });
+          existingByText[it.text] = deck.length - 1;
+          added++;
+        }
+      });
+      saveDeck();
+      renderDeck();
+      if (currentIndex < 0 && deck.length) selectIndex(0);
+      else if (currentIndex >= 0) renderStage();
+      hint.textContent = 'Imported: ' + added + ' new, ' + restored + ' updated with saved progress.';
+      document.getElementById('importFile').value = '';
+    };
+    reader.readAsText(file);
+  });
+
   function applyTheme(mode) {
     if (mode === 'system') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', mode);
@@ -825,6 +908,12 @@
   renderStage();
   saveDeck();
 })();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
 </script>
 </body>
 </html>
