@@ -2,7 +2,7 @@
 // Caches the app shell so it opens instantly and works with a flaky connection.
 // Character stroke data from jsdelivr still needs network the first time it's used.
 
-var CACHE = 'hanzi-practice-v2';
+var CACHE = 'hanzi-practice-v3';
 var APP_SHELL = [
   './',
   './index.html',
