@@ -33,15 +33,15 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #26221b; --paper-2: #322c22; --paper-3: #3c3527;
-      --ink: #efe7d5; --ink-soft: #c9bfa1; --line: #5a5138;
+      --paper: #3a3527; --paper-2: #453f2e; --paper-3: #524b36;
+      --ink: #f5efe0; --ink-soft: #d4c9a8; --line: #6f6547;
       --seal: #d9705b; --seal-ink: #f0a08c; --jade: #7fb89b; --jade-soft: #2c3b33;
       --gold: #d9ac4c; --danger: #d9705b; --shadow: rgba(0, 0, 0, 0.45);
     }
   }
   :root[data-theme="dark"] {
-    --paper: #26221b; --paper-2: #322c22; --paper-3: #3c3527;
-    --ink: #efe7d5; --ink-soft: #c9bfa1; --line: #5a5138;
+    --paper: #3a3527; --paper-2: #453f2e; --paper-3: #524b36;
+    --ink: #f5efe0; --ink-soft: #d4c9a8; --line: #6f6547;
     --seal: #d9705b; --seal-ink: #f0a08c; --jade: #7fb89b; --jade-soft: #2c3b33;
     --gold: #d9ac4c; --danger: #d9705b; --shadow: rgba(0, 0, 0, 0.45);
   }
@@ -80,12 +80,12 @@
   .review-bar.reviewing strong { color: var(--jade); }
 
   .deck { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 12px; margin-bottom: 4px; scrollbar-width: thin; }
-  .chip { flex: 0 0 auto; position: relative; background: var(--paper-2); border: 1.5px solid transparent; border-radius: 10px; padding: 7px 10px 8px; text-align: center; cursor: pointer; min-width: 52px; max-width: 120px; transition: border-color 0.15s ease, transform 0.1s ease; }
+  .chip { flex: 0 0 auto; position: relative; background: var(--paper-2); border: 1.5px solid transparent; border-radius: 10px; padding: 9px 13px 10px; text-align: center; cursor: pointer; min-width: 62px; max-width: 130px; transition: border-color 0.15s ease, transform 0.1s ease; }
   .chip:active { transform: scale(0.96); }
   .chip.active { border-color: var(--seal); background: var(--paper-3); }
-  .chip .txt { font-family: "Noto Serif SC", serif; font-size: 22px; line-height: 1.1; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .chip .txt.long { font-size: 15px; }
-  .chip .py { font-size: 9.5px; color: var(--ink-soft); display: block; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip .txt { font-family: "Noto Serif SC", serif; font-size: 28px; line-height: 1.1; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip .txt.long { font-size: 19px; }
+  .chip .py { font-size: 11px; color: var(--ink-soft); display: block; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chip .dot { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--line); border: 1.5px solid var(--paper); }
   .chip .dot.familiar { background: var(--gold); }
   .chip .dot.mastered { background: var(--jade); }
@@ -99,9 +99,9 @@
     .stage-card { padding: 26px 26px 20px; }
     .stage-info .py-big { font-size: 19px; }
     .stage-info .meaning { font-size: 14.5px; }
-    .chip .txt { font-size: 26px; }
-    .chip .txt.long { font-size: 18px; }
-    .chip { padding: 9px 13px 10px; min-width: 60px; max-width: 140px; }
+    .chip .txt { font-size: 32px; }
+    .chip .txt.long { font-size: 22px; }
+    .chip { padding: 11px 15px 12px; min-width: 70px; max-width: 150px; }
     .feedback { font-size: 15px; }
     .btn { font-size: 15px; padding: 13px 10px; }
   }
@@ -401,8 +401,19 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(deck)); } catch (e) {}
   }
 
+  var LAST_KEY = 'hanzi-practice-last-text';
   var deck = loadDeck();
-  var currentIndex = deck.length ? 0 : -1;
+  var currentIndex = -1;
+  if (deck.length) {
+    currentIndex = 0;
+    try {
+      var lastText = localStorage.getItem(LAST_KEY);
+      if (lastText) {
+        var foundIdx = deck.findIndex(function (d) { return d.text === lastText; });
+        if (foundIdx >= 0) currentIndex = foundIdx;
+      }
+    } catch (e) {}
+  }
   var writers = [];
   var quizBusy = false;
   var reviewMode = false;
@@ -523,6 +534,7 @@
   function selectIndex(i) {
     currentIndex = i;
     quizBusy = false;
+    if (deck[i]) { try { localStorage.setItem(LAST_KEY, deck[i].text); } catch (e) {} }
     nextRow.classList.remove('show');
     feedback.textContent = '\u00A0';
     feedback.className = 'feedback';
